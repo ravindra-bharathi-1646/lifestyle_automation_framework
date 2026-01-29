@@ -1,24 +1,34 @@
 class ProductPage {
   constructor(page) {
     this.page = page;
-    this.sizeLButton = page.getByRole("button", { name: "L", exact: true });
+    // Main Add to Basket button (inside the quantity container)
     this.addToBasketButton = page
       .locator("#notify-quantity")
       .getByRole("button", { name: "ADD TO BASKET" });
+    // Generic Add to Basket (fallback)
+    this.generalAddToBasketButton = page.getByRole("button", {
+      name: "ADD TO BASKET",
+    });
     this.cartIcon = page.getByRole("button", { name: "cart-icon-" });
-    this.reviewClose = page.locator("#review-close");
   }
 
-  async selectSizeL() {
-    await this.sizeLButton.click();
+  // Use a dynamic method to click any size
+  async selectSize(size) {
+    await this.page.getByRole("button", { name: size, exact: true }).click();
   }
 
   async addToBasket() {
-    await this.addToBasketButton.click();
+    // We try the specific one first, then the general one
+    if (await this.addToBasketButton.isVisible()) {
+      await this.addToBasketButton.click();
+    } else {
+      await this.generalAddToBasketButton.click();
+    }
   }
 
   async goToCart() {
     await this.cartIcon.click();
   }
 }
+
 module.exports = { ProductPage };
