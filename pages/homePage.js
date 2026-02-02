@@ -15,9 +15,13 @@ class HomePage {
   }
 
   async dismissNotifications() {
-    // Wait for the button to be attached before clicking
-    await this.dontAllowButton.waitFor({ state: "visible" });
-    await this.dontAllowButton.click();
+    // We use a try/catch block or a short timeout because sometimes the button doesn't appear
+    try {
+      await this.dontAllowButton.waitFor({ state: "visible", timeout: 5000 });
+      await this.dontAllowButton.click();
+    } catch (e) {
+      console.log("Notification button did not appear, continuing...");
+    }
   }
 
   async navigateToCasualShirts() {
