@@ -15,7 +15,6 @@ class HomePage {
   }
 
   async dismissNotifications() {
-    // We use a try/catch block or a short timeout because sometimes the button doesn't appear
     try {
       await this.dontAllowButton.waitFor({ state: "visible", timeout: 5000 });
       await this.dontAllowButton.click();
@@ -32,6 +31,14 @@ class HomePage {
   async sortByPriceLowToHigh() {
     await this.sortButton.click();
     await this.lowToHighOption.click();
+  }
+
+  async searchForProduct(term) {
+    const searchBar = this.page.getByRole("searchbox", {
+      name: "What are you looking for?",
+    });
+    await searchBar.click();
+    await searchBar.fill(term);
   }
 }
 module.exports = { HomePage };
