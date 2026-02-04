@@ -142,34 +142,21 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     await homePage.navigate();
     await homePage.dismissNotifications();
     await homePage.searchForProduct("mens");
-
-    // FIX: Change 'button' to 'link'.
-    // Based on your snapshot, the links available are "Men", "Footwear", etc.
-    // If you specifically want Shirts, it's safer to use the 'Men' link or a more general locator.
     const categoryLink = page
       .getByRole("link", { name: "Men", exact: true })
       .first();
 
     await categoryLink.waitFor({ state: "visible", timeout: 15000 });
     await categoryLink.click();
-
-    // Locating the product - Lifestyles uses specific containers for prices
     const firstProduct = page.locator("div").filter({ hasText: /^₹/ }).nth(1);
     await firstProduct.waitFor({ state: "visible" });
-
-    // Handle the new tab
     const [newPage] = await Promise.all([
       context.waitForEvent("page"),
-      firstProduct.click({ clickCount: 2, force: true }), // Using clickCount: 2 for double click
+      firstProduct.click({ clickCount: 2, force: true }),
     ]);
-
     const productPage = new ProductPage(newPage);
-
-    // Ensure the new page is loaded before checking delivery
     await newPage.waitForLoadState("domcontentloaded");
     await productPage.checkDeliveryDetails("600072");
-
-    // Assert the delivery text appears
     await expect(newPage.getByText(/Delivery Within/i)).toBeVisible({
       timeout: 15000,
     });
