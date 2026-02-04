@@ -39,6 +39,10 @@ class HomePage {
     });
     await searchBar.click();
     await searchBar.fill(term);
+    await this.page.keyboard.press("Enter");
+    await this.page
+      .getByRole("heading", { name: `You searched for ${term}` })
+      .waitFor();
   }
 }
 module.exports = { HomePage };
