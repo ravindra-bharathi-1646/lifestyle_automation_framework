@@ -44,5 +44,28 @@ class HomePage {
       .getByRole("heading", { name: `You searched for ${term}` })
       .waitFor();
   }
+  async applyBrandFilter(brandName) {
+    // Click on Brand filter section
+    await this.page.getByRole("button", { name: "Brand" }).click();
+    await this.page.waitForTimeout(500);
+
+    // Select the brand checkbox
+    const brandCheckbox = this.page.getByRole("checkbox", { name: brandName });
+    await brandCheckbox.waitFor({ state: "visible", timeout: 10000 });
+    await brandCheckbox.click();
+    await this.page.waitForTimeout(1000);
+  }
+
+  async applySizeFilter(size) {
+    // Click on Size filter section
+    await this.page.getByRole("button", { name: "Size" }).click();
+    await this.page.waitForTimeout(500);
+
+    // Select the size checkbox
+    const sizeCheckbox = this.page.getByRole("checkbox", { name: size, exact: true });
+    await sizeCheckbox.waitFor({ state: "visible", timeout: 10000 });
+    await sizeCheckbox.click();
+    await this.page.waitForTimeout(1000);
+  }
 }
 module.exports = { HomePage };

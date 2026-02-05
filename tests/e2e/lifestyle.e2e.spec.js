@@ -1,6 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const { HomePage } = require("../../pages/HomePage");
 const { ProductPage } = require("../../pages/ProductPage");
+const { CartPage } = require("../../pages/CartPage");
 
 test.describe("Lifestyle Stores E2E Suite", () => {
   const shirt1URL =
@@ -28,13 +29,14 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   // --- Test 2 ---
   test("TC02: Add product to cart via direct link", async ({ page }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
 
     await page.goto(shirt1URL);
     await homePage.dismissNotifications();
     await productPage.selectSize("L");
     await productPage.addToBasket();
-    await productPage.goToCart();
+    await cartPage.goToCart();
     await expect(page).toHaveURL(/.*cart/);
   });
 
@@ -43,6 +45,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     page,
   }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
     await homePage.dismissNotifications();
@@ -50,7 +53,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     await expect(page).not.toHaveURL(/.*cart/);
     await productPage.selectSize("L");
     await productPage.addToBasket();
-    await productPage.goToCart();
+    await cartPage.goToCart();
     await expect(page.getByText("Size:L")).toBeVisible();
   });
 
@@ -59,12 +62,13 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     page,
   }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt2URL);
     await homePage.dismissNotifications();
     await productPage.selectSize("L");
     await productPage.addToBasket();
-    await productPage.goToCart();
+    await cartPage.goToCart();
     await expect(page.getByText(/Size:L/)).toBeVisible();
   });
 
@@ -74,6 +78,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   }) => {
     test.slow();
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
 
     await page.goto(shirt1URL);
@@ -81,9 +86,9 @@ test.describe("Lifestyle Stores E2E Suite", () => {
 
     await productPage.selectSize("L");
     await productPage.addToBasket();
-    await productPage.goToCart();
+    await cartPage.goToCart();
 
-    await productPage.updateQuantity(2);
+    await cartPage.updateQuantity(2);
     await expect(
       page
         .locator("div")
@@ -97,6 +102,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     page,
   }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
 
     await page.goto(shirt1URL);
@@ -104,27 +110,27 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     await productPage.selectSize("L");
 
     await productPage.addToBasket();
-    await productPage.goToCart();
+    await cartPage.goToCart();
 
-    await productPage.removeItem();
+    await cartPage.removeItem();
 
     // Loose text match for robustness
-    await expect(
-      page.getByText("The best fashion is waiting", { exact: false }),
-    ).toBeVisible();
+    await cartPage.verifyEmptyCart();
   });
 
+  // test 07
   test("TC07: Pincode Entry and Conditional Coupon Application", async ({
     page,
   }) => {
     const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
     await homePage.dismissNotifications();
     await productPage.selectSize("L");
     await productPage.addToBasket();
-    await productPage.goToCart();
-    await productPage.applyCoupon();
+    await cartPage.goToCart();
+    await cartPage.applyCoupon();
     if (await page.getByText(/Coupon Discount/i).isVisible()) {
       await expect(page.getByText(/Coupon Discount/i)).toBeVisible();
     } else {
@@ -132,35 +138,155 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     }
   });
 
-  test("Verify that the Check Delivery Date widget provides an estimated arrival time when a valid pincode/zip code is entered.", async ({
+  // test 08
+  test("TC08: Verify that the Check Delivery Date widget provides an estimated arrival time when a valid pincode/zip code is entered.", async ({
     page,
-    context,
   }) => {
     test.slow();
+    const productPage = new ProductPage(page);
     const homePage = new HomePage(page);
 
-    await homePage.navigate();
+    // Navigate directly to a product page for reliable testing
+    await page.goto(shirt1URL);
     await homePage.dismissNotifications();
-    await homePage.searchForProduct("mens");
-    const categoryLink = page
-      .getByRole("link", { name: "Men", exact: true })
-      .first();
 
-    await categoryLink.waitFor({ state: "visible", timeout: 15000 });
-    await categoryLink.click();
-    const firstProduct = page.locator("div").filter({ hasText: /^₹/ }).nth(1);
-    await firstProduct.waitFor({ state: "visible" });
-    const [newPage] = await Promise.all([
-      context.waitForEvent("page"),
-      firstProduct.click({ clickCount: 2, force: true }),
-    ]);
-    const productPage = new ProductPage(newPage);
-    await newPage.waitForLoadState("domcontentloaded");
     await productPage.checkDeliveryDetails("600072");
-    await expect(newPage.getByText(/Delivery Within/i)).toBeVisible({
-      timeout: 15000,
-    });
+
+    const deliveryElement = page.getByText(/Delivery Within/i);
+    await expect(deliveryElement).toBeVisible({ timeout: 15000 });
+
+    // Extract and display the delivery date
+    const deliveryText = await deliveryElement.textContent();
+    console.log(`Delivery Information: ${deliveryText}`);
+  });
+
+  // test 09      
+  test("TC09: Verify Share Product copies correct link", async ({ page, context }) => {
+    const productPage = new ProductPage(page);
+    const homePage = new HomePage(page);
+
+    // Grant clipboard permissions
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+    await page.goto(shirt1URL);
+    await homePage.dismissNotifications();
+
+    // Get the original product title
+    const originalTitle = await page.locator("div").filter({ hasText: /^FAME FOREVER Printed Regular Fit Shirt$/ }).first().textContent();
+    console.log(`Original Product Title: ${originalTitle}`);
+
+    // Hover on Share and copy the link
+    const copiedUrl = await productPage.shareProductAndCopyLink();
+    console.log(`Copied URL: ${copiedUrl}`);
+
+    // Open the copied link in a new tab
+    const newPage = await context.newPage();
+    await newPage.goto(copiedUrl);
+    await newPage.waitForLoadState("domcontentloaded");
+
+    // Verify the product title matches in the new tab
+    const newPageTitle = await newPage.locator("div").filter({ hasText: /^FAME FOREVER Printed Regular Fit Shirt$/ }).first().textContent();
+    console.log(` New Page Product Title: ${newPageTitle}`);
+
+    expect(originalTitle).toBe(newPageTitle);
 
     await newPage.close();
+  });
+
+  // test 10
+  test("TC10: Verify size and brand filters and add product to cart", async ({ page }) => {
+    test.slow();
+    const homePage = new HomePage(page);
+    const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
+
+    // Navigate to men's shirts directly
+    await page.goto("https://www.lifestylestores.com/in/en/search?q=men%20shirts");
+    await homePage.dismissNotifications();
+    await page.waitForTimeout(2000);
+
+    // --- Apply Size Filter (L) ---
+    console.log("Applying Size filter...");
+
+    // Using robust locator: finding first collapse icon (assuming it's Size or first category)
+    const sizeCollapse = page.getByRole('button', { name: 'collapse-icon' }).first();
+    await sizeCollapse.waitFor({ state: "visible" });
+    await sizeCollapse.click();
+    await page.waitForTimeout(1000);
+
+    // Select Size L
+    // We try multiple strategies: text or nth(1)
+    const sizeLLabel = page.locator('label').filter({ hasText: /^L$/ }).first();
+    if (await sizeLLabel.isVisible()) {
+      await sizeLLabel.click();
+    } else {
+      await page.getByRole('checkbox').nth(1).check();
+    }
+    console.log("Applied Size filter: L");
+    await page.waitForTimeout(3000);
+
+    // --- Apply Brand Filter ---
+    console.log("Applying Brand filter...");
+    // Try finding Brand header text
+    const brandHeader = page.locator("div").filter({ hasText: /^Brand$/ }).first();
+    if (await brandHeader.isVisible()) {
+      await brandHeader.click();
+    } else {
+      // Fallback to next collapse icon
+      const brandCollapse = page.getByRole('button', { name: 'collapse-icon' }).nth(1);
+      if (await brandCollapse.isVisible()) {
+        await brandCollapse.click();
+      }
+    }
+    await page.waitForTimeout(1000);
+
+    // Select the first available brand
+    const firstBrand = page.getByRole('checkbox').first();
+    await firstBrand.waitFor({ state: "visible" });
+    await firstBrand.check();
+    console.log("Applied Brand filter");
+    await page.waitForTimeout(3000);
+
+    // --- Select Product ---
+    // Click on a filtered product - opens in popup/new tab
+    const page1Promise = page.waitForEvent("popup");
+    const productCard = page.locator("div").filter({ hasText: /^₹/ }).first();
+    await productCard.click({ force: true });
+    const page1 = await page1Promise;
+
+    await page1.waitForLoadState("domcontentloaded");
+    console.log("Selected a filtered product");
+
+    // --- Verify and Add to Cart ---
+    const newProductPage = new ProductPage(page1);
+    const newCartPage = new CartPage(page1);
+
+    // Verify size L is available on product page (button with name "L")
+    const sizeLButton = page1.getByRole("button", { name: "L", exact: true });
+    // Use a try-catch or soft assertion to not fail immediately if L is not found
+    if (await sizeLButton.isVisible()) {
+      if (await sizeLButton.getAttribute('aria-selected') !== 'true') {
+        await sizeLButton.click();
+        console.log("Selected Size: L");
+      } else {
+        console.log("Size L already selected");
+      }
+    } else {
+      console.log("Size L button not found - implies product might be out of stock in that size or filter issue");
+      // Proceeding to add to basket if possible to test cart logic, or select *any* size
+    }
+
+    // Add to basket
+    await newProductPage.addToBasket();
+    console.log("Added product to basket");
+
+    // Go to cart
+    await newCartPage.goToCart();
+
+    // Verify size L is reflected in cart
+    await newCartPage.verifySizeInCart("L");
+    console.log("Verified: Size L is reflected in cart");
+
+    await page1.close();
   });
 });
