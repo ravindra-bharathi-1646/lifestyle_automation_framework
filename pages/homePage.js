@@ -40,16 +40,11 @@ class HomePage {
     await searchBar.click();
     await searchBar.fill(term);
     await this.page.keyboard.press("Enter");
-    await this.page
-      .getByRole("heading", { name: `You searched for ${term}` })
-      .waitFor();
   }
+
   async applyBrandFilter(brandName) {
-    // Click on Brand filter section
     await this.page.getByRole("button", { name: "Brand" }).click();
     await this.page.waitForTimeout(500);
-
-    // Select the brand checkbox
     const brandCheckbox = this.page.getByRole("checkbox", { name: brandName });
     await brandCheckbox.waitFor({ state: "visible", timeout: 10000 });
     await brandCheckbox.click();
@@ -57,15 +52,33 @@ class HomePage {
   }
 
   async applySizeFilter(size) {
-    // Click on Size filter section
     await this.page.getByRole("button", { name: "Size" }).click();
     await this.page.waitForTimeout(500);
-
-    // Select the size checkbox
-    const sizeCheckbox = this.page.getByRole("checkbox", { name: size, exact: true });
+    const sizeCheckbox = this.page.getByRole("checkbox", {
+      name: size,
+      exact: true,
+    });
     await sizeCheckbox.waitFor({ state: "visible", timeout: 10000 });
     await sizeCheckbox.click();
     await this.page.waitForTimeout(1000);
+  }
+
+  async login(mobileNumber) {
+    await this.page.getByRole("button", { name: "SIGN UP / SIGN IN" }).click();
+    await this.page
+      .getByRole("textbox", { name: "Mobile Number" })
+      .fill(mobileNumber);
+    await this.page.getByRole("button", { name: "Continue" }).click();
+    await this.page.pause();
+  }
+
+  async verifyLoggedIn(userName) {
+    const welcomeText = `Welcome ${userName}!AccountFavouritesBasketMore`;
+    await this.page.getByText(welcomeText).waitFor({ state: "visible" });
+  }
+
+  async goToFavourites() {
+    await this.page.locator("#root-header > div > div > div.MuiBox-root.jss64.jss44 > div.MuiBox-root.jss65 > div > div > div.MuiBox-root.jss79.jss61 > div.MuiBox-root.jss88.jss60.jss63").click();
   }
 }
 module.exports = { HomePage };

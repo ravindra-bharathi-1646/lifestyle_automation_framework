@@ -57,5 +57,9 @@ class ProductPage {
     await titleElement.waitFor({ state: "visible", timeout: 10000 });
     return await titleElement.textContent();
   }
+
+  async addToFavourites() {
+    await this.page.getByRole("button", { name: "Add to Favourites" }).click();
+  }
 }
 module.exports = { ProductPage };
