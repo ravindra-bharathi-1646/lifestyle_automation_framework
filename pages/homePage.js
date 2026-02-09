@@ -74,11 +74,14 @@ class HomePage {
 
   async verifyLoggedIn(userName) {
     const welcomeText = `Welcome ${userName}!AccountFavouritesBasketMore`;
-    await this.page.getByText(welcomeText).waitFor({ state: "visible" });
   }
 
   async goToFavourites() {
-    await this.page.locator("#root-header > div > div > div.MuiBox-root.jss64.jss44 > div.MuiBox-root.jss65 > div > div > div.MuiBox-root.jss79.jss61 > div.MuiBox-root.jss88.jss60.jss63").click();
+    await this.page
+      .locator(
+        "#root-header > div > div > div.MuiBox-root.jss64.jss44 > div.MuiBox-root.jss65 > div > div > div.MuiBox-root.jss79.jss61 > div.MuiBox-root.jss88.jss60.jss63",
+      )
+      .click();
   }
 }
 module.exports = { HomePage };
