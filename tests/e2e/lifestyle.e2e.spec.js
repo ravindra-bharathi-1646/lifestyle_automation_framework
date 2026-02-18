@@ -6,20 +6,33 @@ const { FavouritesPage } = require("../../pages/FavouritesPage");
 const { ListingPage } = require("../../pages/ListingPage");
 
 test.describe("Lifestyle Stores E2E Suite", () => {
+  test.use({ storageState: "storageState.json" });
+
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const homePage = new HomePage(page);
+    await homePage.navigate();
+    await homePage.dismissNotifications();
+    await homePage.login("7448508623");
+    await homePage.verifyLoggedIn("ravindra");
+    await context.storageState({ path: "storageState.json" });
+    await context.close();
+  });
+
+  test.afterAll(async () => {
+    const fs = require("fs");
+    try {
+      if (fs.existsSync("storageState.json"))
+        fs.unlinkSync("storageState.json");
+    } catch (e) {
+      console.warn("Failed to remove storage state", e);
+    }
+  });
   const shirt1URL =
     "https://www.lifestylestores.com/in/en/SHOP-Fame-Forever-Blue-FAME-FOREVER-Printed-Regular-Fit-Shirt-For-Men/p/1000014705758-Orange-Orange";
   const shirt2URL =
     "https://www.lifestylestores.com/in/en/SHOP-Fame-Forever-Beige-FAME-FOREVER-Solid-Slim-Fit-Shirt-For-Men/p/1000014028724-White-White";
-
-  test.beforeEach(async ({ page }) => {
-    console.log("Starting test...");
-    await page.goto("https://www.lifestylestores.com/in/en/");
-  });
-
-  test.afterEach(async ({ page }) => {
-    console.log("Test completed. Cleaning up...");
-    await page.waitForTimeout(500);
-  });
 
   // --- Test 1 ---
   test("TC01: Select from categories and sort products", async ({ page }) => {
@@ -327,6 +340,8 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
+    await homePage.login("7448508623");
+    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
   });
@@ -356,6 +371,8 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
+    await homePage.login("7448508623");
+    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
     await favouritesPage.removeItem(0);
@@ -386,6 +403,8 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
+    await homePage.login("7448508623");
+    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
   });

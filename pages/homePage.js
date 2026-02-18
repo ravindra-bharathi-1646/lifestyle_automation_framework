@@ -77,11 +77,8 @@ class HomePage {
   }
 
   async goToFavourites() {
-    await this.page
-      .locator(
-        "#root-header > div > div > div.MuiBox-root.jss64.jss44 > div.MuiBox-root.jss65 > div > div > div.MuiBox-root.jss79.jss61 > div.MuiBox-root.jss88.jss60.jss63",
-      )
-      .click();
+    await this.page;
+    await this.page.getByRole("button", { name: "fav-icon" }).click();
   }
 }
 module.exports = { HomePage };

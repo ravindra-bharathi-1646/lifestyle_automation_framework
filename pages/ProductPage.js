@@ -10,7 +10,14 @@ class ProductPage {
   }
 
   async selectSize(size) {
-    await this.page.getByRole("button", { name: size, exact: true }).click();
+    const sizeButton = this.page.getByRole("button", {
+      name: size,
+      exact: true,
+    });
+    await sizeButton.waitFor({ state: "visible", timeout: 10000 });
+    await sizeButton.scrollIntoViewIfNeeded();
+    await this.page.waitForTimeout(300);
+    await sizeButton.click({ force: true });
   }
 
   async addToBasket() {
@@ -35,7 +42,9 @@ class ProductPage {
 
   async shareProductAndCopyLink() {
     const shareButton = this.page.getByRole("button", { name: "Share" });
-    const copyLinkButton = this.page.getByRole("button", { name: "copy Copy Link" });
+    const copyLinkButton = this.page.getByRole("button", {
+      name: "copy Copy Link",
+    });
 
     // Hover on Share button to reveal options
     await shareButton.hover();
@@ -48,12 +57,17 @@ class ProductPage {
     await this.page.waitForTimeout(500);
 
     // Read the copied URL from clipboard
-    const copiedUrl = await this.page.evaluate(() => navigator.clipboard.readText());
+    const copiedUrl = await this.page.evaluate(() =>
+      navigator.clipboard.readText(),
+    );
     return copiedUrl;
   }
 
   async getProductTitle() {
-    const titleElement = this.page.locator("div").filter({ hasText: /^FAME FOREVER Printed Regular Fit Shirt$/ }).first();
+    const titleElement = this.page
+      .locator("div")
+      .filter({ hasText: /^FAME FOREVER Printed Regular Fit Shirt$/ })
+      .first();
     await titleElement.waitFor({ state: "visible", timeout: 10000 });
     return await titleElement.textContent();
   }
