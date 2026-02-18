@@ -6,27 +6,24 @@ const { FavouritesPage } = require("../../pages/FavouritesPage");
 const { ListingPage } = require("../../pages/ListingPage");
 
 test.describe("Lifestyle Stores E2E Suite", () => {
-  test.use({ storageState: "storageState.json" });
+  let context;
+  let page;
 
   test.beforeAll(async ({ browser }) => {
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    context = await browser.newContext();
+    page = await context.newPage();
     const homePage = new HomePage(page);
     await homePage.navigate();
-    await homePage.dismissNotifications();
+
     await homePage.login("7448508623");
     await homePage.verifyLoggedIn("ravindra");
-    await context.storageState({ path: "storageState.json" });
-    await context.close();
   });
 
   test.afterAll(async () => {
-    const fs = require("fs");
     try {
-      if (fs.existsSync("storageState.json"))
-        fs.unlinkSync("storageState.json");
+      await context.close();
     } catch (e) {
-      console.warn("Failed to remove storage state", e);
+      console.warn("Failed to close context", e);
     }
   });
   const shirt1URL =
@@ -35,10 +32,10 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     "https://www.lifestylestores.com/in/en/SHOP-Fame-Forever-Beige-FAME-FOREVER-Solid-Slim-Fit-Shirt-For-Men/p/1000014028724-White-White";
 
   // --- Test 1 ---
-  test("TC01: Select from categories and sort products", async ({ page }) => {
+  test("TC01: Select from categories and sort products", async () => {
     const homePage = new HomePage(page);
     await homePage.navigate();
-    await homePage.dismissNotifications();
+
     await homePage.navigateToCasualShirts();
     await homePage.sortByPriceLowToHigh();
     await page.waitForTimeout(3000);
@@ -50,12 +47,11 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // --- Test 2 ---
-  test("TC02: Add product to cart via direct link", async ({ page }) => {
+  test("TC02: Add product to cart via direct link", async () => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
     await productPage.selectSize("L");
     await productPage.addToBasket();
     await cartPage.goToCart();
@@ -63,14 +59,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // --- Test 3 ---
-  test("TC03: Verify user must select size before adding to cart", async ({
-    page,
-  }) => {
+  test("TC03: Verify user must select size before adding to cart", async () => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
+
     await productPage.addToBasket();
     await expect(page).not.toHaveURL(/.*cart/);
     await productPage.selectSize("L");
@@ -80,14 +74,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // --- Test 4 ---
-  test("TC04: Verify that a user can select different available sizes", async ({
-    page,
-  }) => {
+  test("TC04: Verify that a user can select different available sizes", async () => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt2URL);
-    await homePage.dismissNotifications();
+
     await productPage.selectSize("L");
     await productPage.addToBasket();
     await cartPage.goToCart();
@@ -95,16 +87,13 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // --- Test 5 ---
-  test("TC05: Verify quantity updates total price dynamically", async ({
-    page,
-  }) => {
+  test("TC05: Verify quantity updates total price dynamically", async () => {
     test.slow();
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
 
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
 
     await productPage.selectSize("L");
     await productPage.addToBasket();
@@ -120,14 +109,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // --- Test 6 ---
-  test("TC06: Verify removing item from cart updates cart correctly", async ({
-    page,
-  }) => {
+  test("TC06: Verify removing item from cart updates cart correctly", async () => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
+
     await productPage.selectSize("L");
     await productPage.addToBasket();
     await cartPage.goToCart();
@@ -136,14 +123,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // test 07
-  test("TC07: Pincode Entry and Conditional Coupon Application", async ({
-    page,
-  }) => {
+  test("TC07: Pincode Entry and Conditional Coupon Application", async () => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
+
     await productPage.selectSize("L");
     await productPage.addToBasket();
     await cartPage.goToCart();
@@ -156,14 +141,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // test 08
-  test("TC08: Verify that the Check Delivery Date widget provides an estimated arrival time when a valid pincode/zip code is entered.", async ({
-    page,
-  }) => {
+  test("TC08: Verify that the Check Delivery Date widget provides an estimated arrival time when a valid pincode/zip code is entered.", async () => {
     test.slow();
     const productPage = new ProductPage(page);
     const homePage = new HomePage(page);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
+
     await productPage.checkDeliveryDetails("600072");
     const deliveryElement = page.getByText(/Delivery Within/i);
     await expect(deliveryElement).toBeVisible({ timeout: 15000 });
@@ -172,15 +155,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // test 09
-  test("TC09: Verify Share Product copies correct link", async ({
-    page,
-    context,
-  }) => {
+  test("TC09: Verify Share Product copies correct link", async () => {
     const productPage = new ProductPage(page);
     const homePage = new HomePage(page);
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto(shirt1URL);
-    await homePage.dismissNotifications();
+
     const originalTitle = await page
       .locator("div")
       .filter({ hasText: /^FAME FOREVER Printed Regular Fit Shirt$/ })
@@ -203,16 +183,13 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   // test 10
-  test("TC10: Verify size and brand filters and add product to cart", async ({
-    page,
-    context,
-  }) => {
+  test("TC10: Verify size and brand filters and add product to cart", async () => {
     test.slow();
     const homePage = new HomePage(page);
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
-    await homePage.dismissNotifications();
+
     console.log("Applying Size filter...");
     const sizeCollapse = page
       .getByRole("button", { name: "collapse-icon" })
@@ -282,7 +259,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
   });
 
   //test 11
-  test("TC11: filter the product and add to cart", async ({ page }) => {
+  test("TC11: filter the product and add to cart", async () => {
     test.slow();
     const homePage = new HomePage(page);
     const listingPage = new ListingPage(page);
@@ -292,7 +269,7 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
-    await homePage.dismissNotifications();
+
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts%3AsleeveLength_uFilter%3AHalf%20Sleeves%3AsleeveLength_uFilter%3AFull%20Sleeves",
     );
@@ -316,14 +293,12 @@ test.describe("Lifestyle Stores E2E Suite", () => {
       .click();
   });
   //test 12
-  test("TC12: Login as a user and need to verify the product added to wishlist", async ({
-    page,
-  }) => {
+  test("TC12: Login as a user and need to verify the product added to wishlist", async () => {
     const homePage = new HomePage(page);
     const productPage = new ProductPage(page);
     const favouritesPage = new FavouritesPage(page);
     await homePage.navigate();
-    await homePage.dismissNotifications();
+
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
@@ -340,21 +315,17 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
-    await homePage.login("7448508623");
-    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
   });
 
   // test 13
-  test("TC13: Verify that the user can add a product to the wishlist and remove it from the wishlist.", async ({
-    page,
-  }) => {
+  test("TC13: Verify that the user can add a product to the wishlist and remove it from the wishlist.", async () => {
     const homePage = new HomePage(page);
     const productPage = new ProductPage(page);
     const favouritesPage = new FavouritesPage(page);
     await homePage.navigate();
-    await homePage.dismissNotifications();
+
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
@@ -371,22 +342,18 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
-    await homePage.login("7448508623");
-    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
     await favouritesPage.removeItem(0);
     await favouritesPage.verifyProductHidden("FAME FOREVER Solid Slim Fit");
   });
   // test 14
-  test("TC14: verify product in favourites page after log out and login again", async ({
-    page,
-  }) => {
+  test("TC14: verify product in favourites page after log out and login again", async () => {
     const homePage = new HomePage(page);
     const productPage = new ProductPage(page);
     const favouritesPage = new FavouritesPage(page);
     await homePage.navigate();
-    await homePage.dismissNotifications();
+
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
@@ -403,32 +370,18 @@ test.describe("Lifestyle Stores E2E Suite", () => {
     ).href;
     await page.goto(absoluteLink);
     await productPage.addToFavourites();
-    await homePage.login("7448508623");
-    await homePage.verifyLoggedIn("ravindra");
     await homePage.goToFavourites();
     await favouritesPage.verifyProductVisible("FAME FOREVER Solid Slim Fit");
   });
-  test("TC15: user adds product to cart, logs out and back in, verifies cart persistence", async ({
-    page,
-  }) => {
+  test("TC15: user adds product to cart, logs out and back in, verifies cart persistence", async () => {
     const homePage = new HomePage(page);
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     await page.goto(
       "https://www.lifestylestores.com/in/en/search?q=men%20shirts",
     );
-    await homePage.dismissNotifications();
-    try {
-      const signInBtn = page.getByRole("button", { name: "SIGN UP / SIGN IN" });
-      if (await signInBtn.isVisible()) {
-        await homePage.login("7448508623");
-        await homePage.verifyLoggedIn("ravindra");
-      }
-    } catch (e) {
-      console.log(
-        "Login check failed or user already logged in. Continuing...",
-      );
-    }
+
+    // assume already logged in from beforeAll
     const firstProductLink = page.locator(
       "//*[@id='product-1000010021853-Purple-Mauve']",
     );
